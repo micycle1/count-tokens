@@ -1,11 +1,12 @@
 use wasm_bindgen::prelude::*;
-use std::cell::RefCell;
-use bpe_openai::{cl100k, p50k, r50k, Bpe};
 
-thread_local! {
-    static CL100K: RefCell<Option<Bpe>> = RefCell::new(None);
-    static P50K: RefCell<Option<Bpe>> = RefCell::new(None);
-    static R50K: RefCell<Option<Bpe>> = RefCell::new(None);
+fn get_tok(enc: &str) -> &'static bpe_openai::Tokenizer {
+    match enc.to_lowercase().as_str() {
+        "o200k" | "o200k_base" => bpe_openai::o200k_base(),
+        "voyage3" | "voyage3_base" => bpe_openai::voyage3_base(),
+        // default
+        _ => bpe_openai::cl100k_base(),
+    }
 }
 
 #[cfg(feature = "console_error_panic_hook")]
@@ -14,51 +15,20 @@ pub fn set_panic_hook() {
     console_error_panic_hook::set_once();
 }
 
-fn with_bpe<R>(encoding: &str, f: impl FnOnce(&Bpe) -> R) -> R {
-    let e = encoding.to_lowercase();
-    match e.as_str() {
-        "cl100k_base" | "gpt-4" | "gpt-3.5-turbo" | "text-embedding-ada-002" => {
-            CL100K.with(|cell| {
-                if cell.borrow().is_none() {
-                    cell.replace(Some(cl100k()));
-                }
-                f(cell.borrow().as_ref().unwrap())
-            })
-        }
-        "p50k_base" | "text-davinci-003" | "text-davinci-002" | "code-davinci" => {
-            P50K.with(|cell| {
-                if cell.borrow().is_none() {
-                    cell.replace(Some(p50k()));
-                }
-                f(cell.borrow().as_ref().unwrap())
-            })
-        }
-        "r50k_base" | "gpt2" => {
-            R50K.with(|cell| {
-                if cell.borrow().is_none() {
-                    cell.replace(Some(r50k()));
-                }
-                f(cell.borrow().as_ref().unwrap())
-            })
-        }
-        _ => {
-            // default to cl100k_base
-            CL100K.with(|cell| {
-                if cell.borrow().is_none() {
-                    cell.replace(Some(cl100k()));
-                }
-                f(cell.borrow().as_ref().unwrap())
-            })
-        }
-    }
-}
-
 #[wasm_bindgen]
 pub fn count_tokens(encoding: &str, text: &str) -> u32 {
-    with_bpe(encoding, |bpe| bpe.count(text) as u32)
+    get_tok(encoding).count(text) as u32
 }
 
 #[wasm_bindgen]
 pub fn tokenize_to_ids(encoding: &str, text: &str) -> Vec<u32> {
-    with_bpe(encoding, |bpe| bpe.encode(text).into_iter().map(|id| id as u32).collect())
+    get_tok(encoding).encode(text).into_iter().map(|x| x as u32).collect()
+}
+
+// Optional but handy: count with an upper bound, faster for small limits
+#[wasm_bindgen]
+pub fn count_till_limit(encoding: &str, text: &str, limit: u32) -> Option<u32> {
+    let tok = get_tok(encoding);
+    let norm = tok.normalize(text);
+    tok.count_till_limit(&norm, limit as usize).map(|n| n as u32)
 }
