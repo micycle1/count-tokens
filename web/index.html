@@ -1,21 +1,71 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Count Tokens (Rust + WASM)</title>
   <style>
-    :root { color-scheme: light dark; }
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; max-width: 900px; margin: 24px auto; padding: 0 12px; }
-    h1 { font-size: 1.5rem; margin: 0 0 12px; }
-    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin: 8px 0; }
-    label { font-weight: 600; }
-    select { padding: 4px 8px; }
-    textarea { width: 100%; height: 240px; padding: 10px; box-sizing: border-box; font: inherit; }
-    .muted { opacity: 0.7; }
-    .counter { font-size: 1.1rem; }
+    :root {
+      color-scheme: light dark;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      max-width: 900px;
+      margin: 24px auto;
+      padding: 0 12px;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      margin: 0 0 12px;
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin: 8px 0;
+    }
+
+    label {
+      font-weight: 600;
+    }
+
+    select,
+    button {
+      padding: 4px 8px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 240px;
+      padding: 10px;
+      box-sizing: border-box;
+      font: inherit;
+    }
+
+    .muted {
+      opacity: 0.7;
+    }
+
+    .counter {
+      font-size: 1.1rem;
+    }
+
+    #preview {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      background: color-mix(in oklab, Canvas 90%, CanvasText 5%);
+      padding: 8px;
+      border-radius: 6px;
+      display: none;
+    }
   </style>
 </head>
+
 <body>
   <h1>OpenAI-style Token Counter</h1>
 
@@ -29,12 +79,21 @@
     <span id="status" class="muted">Loading…</span>
   </div>
 
-  <p class="muted">Paste or type text below:</p>
-  <textarea id="input" placeholder="Type or paste text here…"></textarea>
+  <p class="muted">Type small inputs below, or paste massive text (we won’t render it).</p>
+  <textarea id="input" placeholder="Type here…" spellcheck="false" autocomplete="off" autocorrect="off"
+    autocapitalize="off" wrap="off"></textarea>
+
+  <div class="row">
+    <button id="clear">Clear</button>
+    <label class="muted"><input type="checkbox" id="showPreview"> Show preview (first 2k chars)</label>
+    <span id="info" class="muted"></span>
+  </div>
 
   <div class="row counter">
     <span>Token count: <strong id="count">0</strong></span>
   </div>
+
+  <pre id="preview"></pre>
 
   <noscript>
     <p>Please enable JavaScript to use this tool.</p>
@@ -42,4 +101,5 @@
 
   <script type="module" src="./main.js"></script>
 </body>
+
 </html>
