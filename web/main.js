@@ -1,4 +1,4 @@
-import init, { count_tokens, tokenize_to_ids } from "./pkg/count-tokens.js";
+import init, { count_tokens, tokenize_to_ids } from "./pkg/count_tokens.js";
 
 const input = document.getElementById("input");
 const encoding = document.getElementById("encoding");
