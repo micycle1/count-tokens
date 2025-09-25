@@ -32,13 +32,17 @@ jobs:
       - name: Build WASM (web target)
         run: wasm-pack build --release --target web --out-dir pkg
 
-      - name: Optimize WASM (optional)
+      - name: Install binaryen (latest)
         run: |
-          sudo apt-get update && sudo apt-get install -y binaryen
-          if [ -f pkg/*_bg.wasm ]; then
-            wasm-opt -Oz -o pkg/optimized.wasm pkg/*_bg.wasm
-            mv pkg/optimized.wasm pkg/$(basename pkg/*_bg.wasm)
-          fi
+          BIN_VER=124
+          curl -L -o /tmp/bin.tgz https://github.com/WebAssembly/binaryen/releases/download/version_$BIN_VER/binaryen-version_$BIN_VER-x86_64-linux.tar.gz
+          tar -xzf /tmp/bin.tgz -C /tmp
+          echo "/tmp/binaryen-version_$BIN_VER/bin" >> $GITHUB_PATH
+
+      - name: Optimize WASM (safe for reference types)
+        run: |
+          FILE=$(ls pkg/*_bg.wasm)
+          /tmp/binaryen-version_124/bin/wasm-opt -Oz --enable-reference-types -o "$FILE" "$FILE"
 
       - name: Prepare site for deployment
         run: |
