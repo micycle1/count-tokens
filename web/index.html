@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Token Counter (WASM)</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            max-width: 800px;
+            margin: 24px auto;
+            padding: 0 12px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+        }
+
+        .row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>OpenAI-style Token Counter (Rust + WASM)</h1>
+    <div class="row"> <label>Encoding:</label> <select id="encoding">
+            <option value="cl100k_base" selected>cl100k_base (GPT-4, GPT-3.5)</option>
+            <option value="p50k_base">p50k_base (text-davinci, etc.)</option>
+            <option value="r50k_base">r50k_base / gpt2</option>
+        </select> <span id="status">Loading...</span> </div>
+    <p>Paste text below:</p> <textarea id="input" placeholder="Type or paste text here..."></textarea>
+    <p>Token count: <strong id="count">0</strong></p>
+    <pre id="ids" style="white-space: pre-wrap;"></pre>
+    <script type="module" src="./main.js"></script>
+</body>
+
+</html>
