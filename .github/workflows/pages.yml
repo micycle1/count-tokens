@@ -1,0 +1,64 @@
+name: Build and deploy (WASM tokenizer)
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install wasm-pack
+        run: curl -sSf https://rustwasm.github.io/wasm-pack/installer/init.sh | sh -s -- -y
+
+      - name: Build WASM (web target)
+        run: wasm-pack build --release --target web --out-dir pkg
+
+      - name: Optimize WASM (optional)
+        run: |
+          sudo apt-get update && sudo apt-get install -y binaryen
+          if [ -f pkg/*_bg.wasm ]; then
+            wasm-opt -Oz -o pkg/optimized.wasm pkg/*_bg.wasm
+            mv pkg/optimized.wasm pkg/$(basename pkg/*_bg.wasm)
+          fi
+
+      - name: Prepare site for deployment
+        run: |
+          mkdir -p dist
+          cp -r web/* dist/
+          cp -r pkg dist/pkg
+          touch dist/.nojekyll
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
