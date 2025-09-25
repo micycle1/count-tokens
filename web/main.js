@@ -6,11 +6,17 @@ const countEl = document.getElementById("count");
 const idsEl = document.getElementById("ids");
 const statusEl = document.getElementById("status");
 
-async function boot() {
-  await init(); // initializes WASM
-  statusEl.textContent = "Ready";
-  recalc();
-}
+// Disable UI until WASM is ready
+input.disabled = true;
+encoding.disabled = true;
+statusEl.textContent = "Loading…";
+
+// Top-level await ensures we init exactly once before anything else runs
+await init(new URL("./pkg/count_tokens_bg.wasm", import.meta.url));
+
+statusEl.textContent = "Ready";
+input.disabled = false;
+encoding.disabled = false;
 
 function debounce(fn, ms = 80) {
   let t;
@@ -21,6 +27,8 @@ const recalc = debounce(() => {
   try {
     const enc = encoding.value;
     const text = input.value;
+
+    // WASM is guaranteed initialized at this point
     const count = count_tokens(enc, text);
     countEl.textContent = String(count);
 
@@ -38,5 +46,4 @@ const recalc = debounce(() => {
 
 input.addEventListener("input", recalc);
 encoding.addEventListener("change", recalc);
-
-boot();
+recalc();
